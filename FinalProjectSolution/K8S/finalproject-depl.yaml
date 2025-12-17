@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finalproject-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finalproject
+  template:
+    metadata:
+      labels:
+        app: finalproject
+    spec:
+      containers:
+        - name: finalproject
+          image: finalproject:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Development"
+            - name: ConnectionStrings__DefaultConnection
+              value: "Server=mssql-clusterip-srv,1433;Database=FinalProject;User Id=sa;Password=Password1!;TrustServerCertificate=True"
+            - name: RabbitMQ__HostName
+              value: "rabbitmq-clusterip-srv"
+            - name: RabbitMQ__QueueName
+              value: "email_queue"

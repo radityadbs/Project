@@ -1,0 +1,35 @@
+﻿@using FinalProject.Components.Auth
+@using Microsoft.AspNetCore.Components.Routing
+@using FinalProject.Components.Layout
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="FinalProject.styles.css" />
+
+    <title>FinalProject</title>
+</head>
+<body>
+    <app>
+        <Router AppAssembly="@typeof(Program).Assembly">
+            <Found Context="routeData">
+                <RouteView RouteData="@routeData" DefaultLayout="@typeof(FinalProject.Components.Layout.MainLayout)" />
+            </Found>
+            <NotFound>
+                <LayoutView Layout="@typeof(FinalProject.Components.Layout.MainLayout)">
+                    <h1>404 - Page not found</h1>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </app>
+
+    <script src="_framework/blazor.server.js"></script>
+</body>
+</html>
+

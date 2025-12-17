@@ -1,0 +1,45 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      SA_PASSWORD: "Password1!"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  finalproject:
+    build:
+      context: .
+      dockerfile: FinalProject/Dockerfile
+    container_name: finalproject
+    ports:
+      - "5000:80"
+    depends_on:
+      - sqlserver
+      - rabbitmq
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # Menghubungkan dengan Kubernetes services (RabbitMQ & SQL Server)
+      RABBITMQ_HOST: "10.105.133.61"
+      SQLSERVER_HOST: "10.98.60.98"
+
+  emailworker:
+    build:
+      context: .
+      dockerfile: EmailWorker/Dockerfile
+    container_name: emailworker
+    depends_on:
+      - rabbitmq
+
+volumes:
+  sql_data:

@@ -1,0 +1,15 @@
+@using FinalProject.Services
+@inject AuthSessionService Auth
+@inject NavigationManager Nav
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(1);
+
+        if (!Auth.IsLoggedIn)
+        {
+            Nav.NavigateTo("/login", true);
+        }
+    }
+}

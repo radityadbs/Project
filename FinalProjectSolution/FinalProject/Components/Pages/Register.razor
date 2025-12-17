@@ -1,0 +1,156 @@
+@page "/register"
+@layout FinalProject.Components.Layout.AuthLayout
+@rendermode InteractiveServer
+
+@using FinalProject.Dtos
+@using FinalProject.Services
+
+@inject AuthService Auth
+@inject NavigationManager Nav
+@inject DesaService DesaService
+
+<h3>Register</h3>
+
+<EditForm Model="model" OnValidSubmit="HandleRegister">
+    <DataAnnotationsValidator />
+
+    <!-- EMAIL -->
+    <div class="mb-3">
+        <label>Email</label>
+        <InputText class="form-control" @bind-Value="model.Email" />
+        <ValidationMessage For="@(() => model.Email)" />
+    </div>
+
+    <!-- USERNAME -->
+    <div class="mb-3">
+        <label>Username</label>
+        <InputText class="form-control" @bind-Value="model.Username" />
+        <ValidationMessage For="@(() => model.Username)" />
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="mb-3">
+        <label>Password</label>
+        <InputText type="password" class="form-control" @bind-Value="model.Password" />
+        <ValidationMessage For="@(() => model.Password)" />
+    </div>
+
+    <!-- NIK -->
+    <div class="mb-3">
+        <label>NIK</label>
+        <InputText class="form-control" @bind-Value="model.Nik" />
+        <ValidationMessage For="@(() => model.Nik)" />
+    </div>
+
+    <!-- FULL NAME -->
+    <div class="mb-3">
+        <label>Nama Lengkap</label>
+        <InputText class="form-control" @bind-Value="model.FullName" />
+        <ValidationMessage For="@(() => model.FullName)" />
+    </div>
+
+    <!-- PHONE -->
+    <div class="mb-3">
+        <label>No. Telepon</label>
+        <InputText class="form-control" @bind-Value="model.PhoneNumber" />
+        <ValidationMessage For="@(() => model.PhoneNumber)" />
+    </div>
+
+    <!-- ADDRESS -->
+    <div class="mb-3">
+        <label>Alamat</label>
+        <InputTextArea class="form-control" @bind-Value="model.Address" />
+        <ValidationMessage For="@(() => model.Address)" />
+    </div>
+
+    <!-- SEARCH DESA -->
+    <div class="mb-3 position-relative">
+        <label>Desa</label>
+
+        <input class="form-control" placeholder="Cari desa (min 3 huruf)" value="@searchText"
+            @oninput="OnSearchInput" />
+
+        <ValidationMessage For="@(() => model.DesaId)" />
+
+        @if (filteredDesa.Any())
+        {
+            <ul class="list-group position-absolute w-100 shadow" style="z-index:1000; max-height:250px; overflow:auto">
+                @foreach (var d in filteredDesa)
+                {
+                    <li class="list-group-item list-group-item-action" style="cursor:pointer" @onclick="() => SelectDesa(d)">
+                        <strong>@d.desa</strong><br />
+                        <small>@d.kecamatan - @d.kabupaten</small>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <button class="btn btn-primary" type="submit">
+        Register
+    </button>
+
+    <div class="mt-3">
+        Sudah punya akun? <a href="/login">Login</a>
+    </div>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-info mt-3">
+        @message
+    </div>
+}
+
+@code {
+    private RegisterDto model = new();
+
+    private List<DesaDto> filteredDesa = new();
+    private string searchText = "";
+    private string message = "";
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? "";
+
+        if (searchText.Length < 3)
+        {
+            filteredDesa.Clear();
+            return;
+        }
+
+        try
+        {
+            filteredDesa = await DesaService.SearchAsync(searchText);
+            StateHasChanged(); 
+        }
+        catch
+        {
+            filteredDesa.Clear();
+        }
+    }
+
+    private void SelectDesa(DesaDto desa)
+    {
+        model.DesaId = desa.id;
+        model.DesaName = desa.desa;
+        
+        searchText = $"{desa.desa} - {desa.kecamatan} - {desa.kabupaten}";
+        filteredDesa.Clear();
+    }
+
+    private async Task HandleRegister()
+    {
+        try
+        {
+            await Auth.RegisterAsync(model);
+            Console.WriteLine(model.DesaName);
+            message = "Registrasi berhasil. Silakan cek email.";
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+        }
+    }
+
+}

@@ -1,0 +1,21 @@
+﻿@page "/"
+@page "/home"
+@using FinalProject.Components.Auth
+@layout FinalProject.Components.Layout.MainLayout
+@inject NavigationManager Nav
+@inject IHttpContextAccessor Http
+
+<AuthGuard />
+<h1>Hello, world!</h1>
+
+<p>Selamat datang <b>@Http.HttpContext?.Session.GetString("AUTH_EMAIL")</b></p>
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (Http.HttpContext?.Session.GetString("AUTH_EMAIL") == null)
+        {
+            Nav.NavigateTo("/login", true);
+        }
+    }
+}

@@ -1,0 +1,186 @@
+@page "/profile"
+
+@layout FinalProject.Components.Layout.MainLayout
+@rendermode InteractiveServer
+
+@using FinalProject.Services
+@using FinalProject.Dtos
+@using FinalProject.Models
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext Db
+@inject IHttpContextAccessor Http
+@inject NavigationManager Nav
+@inject DesaService DesaService
+
+<h3>Profile</h3>
+
+@if (!string.IsNullOrEmpty(success))
+{
+    <div class="alert alert-success fade show">
+        @success
+    </div>
+}
+
+@if (model == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <form method="post" enctype="multipart/form-data" action="/api/profile">
+        <div class="mb-3">
+            <label>Email</label>
+            <input class="form-control" name="Email" value="@model.Email" readonly />
+        </div>
+        <a class="btn btn-warning" href="/change-password">
+            Ganti Password
+        </a>
+
+        <div class="mb-3">
+            <label>NIK</label>
+            <input class="form-control" name="Nik" value="@model.Nik" />
+        </div>
+
+        <div class="mb-3">
+            <label>Nama Lengkap</label>
+            <input class="form-control" name="FullName" value="@model.FullName" />
+        </div>
+
+        <div class="mb-3">
+            <label>No. Telepon</label>
+            <input class="form-control" name="PhoneNumber" value="@model.PhoneNumber" />
+        </div>
+
+        <div class="mb-3">
+            <label>Alamat</label>
+            <textarea class="form-control" name="Address">@model.Address</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label>Foto Profil</label><br />
+            @if (!string.IsNullOrEmpty(model.PhotoPath))
+            {
+                <img src="@model.PhotoPath" width="120" class="mb-2 rounded" />
+            }
+            <input type="file" name="Photo" class="form-control" />
+        </div>
+        <!-- SEARCH DESA -->
+        <div class="mb-3 position-relative">
+            <label>Desa</label>
+
+            <input class="form-control" placeholder="Cari desa (min 3 huruf)" value="@searchText"
+                @oninput="OnSearchInput" />
+
+            <input type="hidden" name="DesaId" value="@model.DesaId" />
+            <input type="hidden" name="DesaName" value="@model.DesaName">
+
+            @if (filteredDesa.Any())
+            {
+                <ul class="list-group position-absolute w-100 shadow" style="z-index:1000; max-height:250px; overflow:auto">
+                    @foreach (var d in filteredDesa)
+                    {
+                        <li class="list-group-item list-group-item-action" style="cursor:pointer" @onclick="() => SelectDesa(d)">
+                            <strong>@d.desa</strong><br />
+                            <small>@d.kecamatan - @d.kabupaten</small>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
+
+        <button class="btn btn-primary">
+            Simpan Perubahan
+        </button>
+    </form>
+}
+
+@code {
+    private ReqProfileDto? model;
+    private string? success;
+    private List<DesaDto> filteredDesa = new();
+    private string searchText = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // cek session login
+        var email = Http.HttpContext?.Session.GetString("AUTH_EMAIL");
+        if (email == null)
+        {
+            Nav.NavigateTo("/login", true);
+            return;
+        }
+
+        // ambil user dari DB
+        var user = await Db.Users.FirstAsync(u => u.Email == email);
+
+        model = new ReqProfileDto
+        {
+            Email = user.Email,
+            Nik = user.Nik,
+            FullName = user.FullName,
+            Address = user.Address,
+            PhoneNumber = user.PhoneNumber,
+            DesaId = user.DesaId,
+            DesaName = user.DesaName,
+            PhotoPath = user.PhotoPath
+        };
+
+
+        if (!string.IsNullOrEmpty(model.DesaName))
+        {
+            searchText = model.DesaName;
+        }
+        else
+        {
+            searchText = "Desa Kosong di DB";
+        }
+
+        // ambil query ?success=
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        if (query.TryGetValue("success", out var s))
+        {
+            success = s;
+            _ = HideSuccessAfterDelay();
+        }
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? "";
+
+        if (searchText.Length < 3)
+        {
+            filteredDesa.Clear();
+            return;
+        }
+
+        try
+        {
+            filteredDesa = await DesaService.SearchAsync(searchText);
+            StateHasChanged();
+        }
+        catch
+        {
+            filteredDesa.Clear();
+        }
+    }
+
+
+    private void SelectDesa(DesaDto desa)
+    {
+        model!.DesaId = desa.id;
+        model.DesaName = desa.desa;
+        searchText = $"{desa.desa} - {desa.kecamatan} - {desa.kabupaten}";
+        filteredDesa.Clear();
+    }
+
+    private async Task HideSuccessAfterDelay()
+    {
+        await Task.Delay(5000); // 5 detik
+        success = null;
+        Nav.NavigateTo("/profile", true);
+        StateHasChanged();
+    }
+}

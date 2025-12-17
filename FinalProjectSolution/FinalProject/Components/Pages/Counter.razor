@@ -1,0 +1,37 @@
+﻿@page "/counter"
+@layout FinalProject.Components.Layout.MainLayout
+@rendermode InteractiveServer
+@using FinalProject.Components.Auth
+@using FinalProject.Services
+@inject AuthService Auth
+@inject NavigationManager Nav
+@inject IHttpContextAccessor Http
+
+<PageTitle>Counter</PageTitle>
+
+<AuthGuard />
+<h1>Counter</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code {
+    private int currentCount = 0;
+    
+    protected override async Task OnInitializedAsync()
+    {
+       @* // cek session login
+        var email = Http.HttpContext?.Session.GetString("AUTH_EMAIL");
+        if (email == null)
+        {
+            Nav.NavigateTo("/login", true);
+            return;
+        } *@
+    }
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}

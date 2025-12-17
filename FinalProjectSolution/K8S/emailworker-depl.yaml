@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emailworker-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emailworker
+  template:
+    metadata:
+      labels:
+        app: emailworker
+    spec:
+      containers:
+        - name: emailworker
+          image: emailworker:latest
+          imagePullPolicy: Never
+          env:
+          - name: RabbitMQ__HostName
+            value: "rabbitmq-clusterip-srv"
+          - name: RabbitMQ__QueueName
+            value: "email_queue"
+          - name: Email__SmtpHost
+            valueFrom:
+              secretKeyRef:
+                name: email-secrets
+                key: EMAIL_SMTP_HOST
+          - name: Email__SmtpPort
+            valueFrom:
+              secretKeyRef:
+                name: email-secrets
+                key: EMAIL_SMTP_PORT
+          - name: Email__Username
+            valueFrom:
+              secretKeyRef:
+                name: email-secrets
+                key: EMAIL_USERNAME
+          - name: Email__Password
+            valueFrom:
+              secretKeyRef:
+                name: email-secrets
+                key: EMAIL_PASSWORD
+          - name: Email__From
+            valueFrom:
+              secretKeyRef:
+                name: email-secrets
+                key: EMAIL_FROM
+          - name: Email__FromName
+            valueFrom:
+              secretKeyRef:
+                name: email-secrets
+                key: EMAIL_FROM_NAME
+

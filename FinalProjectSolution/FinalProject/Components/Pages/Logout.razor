@@ -1,0 +1,13 @@
+@page "/logout"
+@layout FinalProject.Components.Layout.AuthLayout
+@using FinalProject.Services
+@inject AuthSessionService Auth
+@inject NavigationManager Nav
+
+@code {
+    protected override void OnInitialized()
+    {
+        Auth.Logout();
+        Nav.NavigateTo("/login", true);
+    }
+}

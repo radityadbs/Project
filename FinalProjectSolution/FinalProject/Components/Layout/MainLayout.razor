@@ -1,0 +1,25 @@
+﻿@using FinalProject.Services
+@inherits LayoutComponentBase
+@inject AuthSessionService Auth
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            @if (Auth.IsLoggedIn)
+            {
+                <span class="me-3">Hello, @Auth.Email</span>
+                <form method="post" action="/api/logout">
+                    <button class="btn btn-danger">Logout</button>
+                </form>
+            }
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
